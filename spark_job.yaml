@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      job: spark-job
+  template:
+    metadata:
+      labels:
+        job: spark-job
+    spec:
+      containers:
+        - args:
+          - '/opt/spark/bin/spark-submit ../examples/src/main/python/pi.py 10; tail -f /dev/null'
+          command:
+          - /bin/sh
+          - -c
+#          image: rkboss/spark:v3.1.1
+          image: apache/spark:3.3.3-python3
+          imagePullPolicy: Always
+          name: main
+          resources:
+            requests:
+              cpu: ".5"
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /opt/spark/conf
+              name: spark-config
+      imagePullSecrets:
+        - name: regcred
+      serviceAccount: spark
+      serviceAccountName: spark
+      volumes:
+        - configMap:
+            name: spark-config
+          name: spark-config
